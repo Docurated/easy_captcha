@@ -1,7 +1,8 @@
 module EasyCaptcha
   # captcha controller
   class CaptchaController < ActionController::Base
-    before_filter :overwrite_cache_control
+    #before_filter is not campatible with rails 6, it is changed with before_action
+    before_action :overwrite_cache_control
     # captcha action send the generated image to browser
     def captcha
       if params[:format] == "wav" and EasyCaptcha.espeak?
