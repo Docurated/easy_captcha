@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module EasyCaptcha
   module Generator
 
@@ -7,42 +5,47 @@ module EasyCaptcha
     class Default < Base
 
       # set default values
-    #   def defaults
-    #     @font_size              = 24
-    #     @font_fill_color        = '#333333'
-    #     @font                   = File.expand_path('../../../../resources/captcha.ttf', __FILE__)
-    #     @font_stroke            = '#000000'
-    #     @font_stroke_color      = 0
-    #     @image_background_color = '#FFFFFF'
-    #     @sketch                 = true
-    #     @sketch_radius          = 3
-    #     @sketch_sigma           = 1
-    #     @wave                   = true
-    #     @wave_length            = (60..100)
-    #     @wave_amplitude         = (3..5)
-    #     @implode                = 0.05
-    #     @blur                   = true
-    #     @blur_radius            = 1
-    #     @blur_sigma             = 2
-    #   end
+       def defaults
+         @font_size              = 28
+         @font_fill_color        = '#333333'
+         @font                   = File.expand_path('../../../../resources/captcha.ttf', __FILE__)
+         @font_stroke            = '#000000'
+         @font_stroke_color      = 0
+         @image_background_color = '#FFFFFF'
+         @sketch                 = true
+         @sketch_radius          = 3
+         @sketch_sigma           = 1
+         @wave                   = true
+         @wave_length            = (60..100)
+         @wave_amplitude         = (3..5)
+         @implode                = 0.05
+         @blur                   = true
+         @blur_radius            = 1
+         @blur_sigma             = 2
+         @x_axis                 = 5
+         @y_axis                 = 25
+       end
 
-    #   # Font
-    #   attr_accessor :font_size, :font_fill_color, :font, :font_family, :font_stroke, :font_stroke_color
+      # Font
+      attr_accessor :font_size, :font_fill_color, :font, :font_family, :font_stroke, :font_stroke_color
 
-    #   # Background
-    #   attr_accessor :image_background_color, :background_image
+      # Text coordinates
+      attr_accessor :x_axis, :y_axis
 
-    #   # Sketch
-    #   attr_accessor :sketch, :sketch_radius, :sketch_sigma
+      # Background
+      attr_accessor :image_background_color, :background_image
 
-    #   # Wave
-    #   attr_accessor :wave, :wave_length, :wave_amplitude
+      # Sketch
+      attr_accessor :sketch, :sketch_radius, :sketch_sigma
 
-    #   # Implode
-    #   attr_accessor :implode
+      # Wave
+      attr_accessor :wave, :wave_length, :wave_amplitude
 
-    #   # Gaussian Blur
-    #   attr_accessor :blur, :blur_radius, :blur_sigma
+      # Implode
+      attr_accessor :implode
+
+      # Gaussian Blur
+      attr_accessor :blur, :blur_radius, :blur_sigma
 
     #   def sketch? #:nodoc:
     #     @sketch
@@ -126,29 +129,30 @@ module EasyCaptcha
     #     image
     #   end
 
+    # Generate image and store in public/images folder of your code by name 'captcha.png'
+    # captcha.png is a rotated image file.
     def generate(code)
       require 'rmagick' unless defined?(Magick)
-
-      canvas = Magick::Image.new(140, 40)
-      gc = Magick::Draw.new
-      gc.pointsize(22)
-      gc.text(5, 25, code.center(14))
-      gc.draw(canvas)
-      gc.font = File.expand_path('../../../../resources/captcha.ttf', __FILE__)
-      canvas = apply_distortion!(canvas)
-      folder_path = "#{Rails.root}/public/images/"
-      filename = 'captcha.png'
-      destination_path = File.join(folder_path, filename)
-
       begin
+        config = self
+        canvas = Magick::Image.new(EasyCaptcha.image_width, EasyCaptcha.image_height)
+        image_drawer = Magick::Draw.new
+        image_drawer.pointsize(config.font_size)
+        image_drawer.text(config.x_axis, config.y_axis, code.center(9)) 
+        image_drawer.font=config.font
+        image_drawer.draw(canvas)
+        canvas = apply_distortion!(canvas)
+        folder_path = "#{Rails.root}/public/images/"
+        filename = 'captcha.png'
+        destination_path = File.join(folder_path, filename)
         canvas.write(destination_path)
-      rescue Magick::ImageMagickError => e
-        Rails.logger.info("RMagick Error: #{e.message}")
+      rescue => e
+        Rails.logger.info("Error in generating EasyCaptcha: #{e.message}")
       end
     end
 
     def apply_distortion!(image)
-      image = image.blur_image(2.0, 2.0)
+      image = image.blur_image(1.50, 2.0)
       image = image.wave *random_wave_distortion
       image = image.implode random_implode_distortion
       image = image.swirl rand(10)
@@ -157,7 +161,7 @@ module EasyCaptcha
     end
 
     def random_wave_distortion
-      [6]
+      [0.5]
     end
 
     def random_implode_distortion
