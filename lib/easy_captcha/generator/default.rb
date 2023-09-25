@@ -24,6 +24,7 @@ module EasyCaptcha
          @blur_sigma             = 2
          @x_axis                 = 5
          @y_axis                 = 25
+         @captcha_image_path     = File.expand_path('../../../../resources/captcha.png', __FILE__)
        end
 
       # Font
@@ -31,6 +32,9 @@ module EasyCaptcha
 
       # Text coordinates
       attr_accessor :x_axis, :y_axis
+
+      # folder
+      attr_accessor :captcha_image_path
 
       # Background
       attr_accessor :image_background_color, :background_image
@@ -142,10 +146,8 @@ module EasyCaptcha
         image_drawer.font=config.font
         image_drawer.draw(canvas)
         canvas = apply_distortion!(canvas)
-        folder_path = "#{Rails.root}/public/images/"
-        filename = 'captcha.png'
-        destination_path = File.join(folder_path, filename)
-        canvas.write(destination_path)
+        canvas.write(config.captcha_image_path)
+        image = File.read(config.captcha_image_path)
       rescue => e
         Rails.logger.info("Error in generating EasyCaptcha: #{e.message}")
       end
